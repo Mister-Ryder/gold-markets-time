@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="dark">
+<html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -370,8 +370,8 @@
 <body>
 
 <div class="theme-toggle" onclick="toggleTheme()">
-  <span class="icon" id="themeIcon">☀️</span>
-  <span class="lbl" id="themeLbl">浅色</span>
+  <span class="icon" id="themeIcon">🌙</span>
+  <span class="lbl" id="themeLbl">深色</span>
 </div>
 
 <div class="container">
@@ -407,7 +407,7 @@
       <div class="conv-rate-info">
         <span>USD/CNY：<span class="rate-val" id="rateVal">--</span></span>
         <span class="rate-status" id="rateStatus"><span class="spinner" style="width:10px;height:10px;border-width:1.5px;margin-right:4px"></span>获取中</span>
-        <button class="refresh-btn" onclick="customRateActive=false;fetchRate()">↻ 刷新汇率</button>
+        <button class="refresh-btn" onclick="customRateActive=false;fetchRate(false)">↻ 刷新汇率</button>
         <span style="color:var(--text-dim);font-size:.65rem">|</span>
         <span style="font-size:.68rem;color:var(--text-dim)">自定义：</span>
         <input type="number" id="customRate" step="0.01" min="5" max="10" placeholder="如 6.90"
@@ -420,9 +420,7 @@
     </div>
     <div class="conv-note">公式：人民币/克 = (美元/盎司 × 汇率) ÷ 31.1035 &nbsp;|&nbsp; 优先从国家外汇管理局获取当日中间价（每工作日更新一次）</div>
     <div class="conv-grid-wrapper">
-      <div id="convTableContainer">
-        <div class="conv-loading"><span class="spinner"></span>正在获取实时汇率…</div>
-      </div>
+      <div id="convTableContainer"></div>
     </div>
   </div>
 
@@ -704,10 +702,16 @@ const TROY_OZ_GRAMS = 31.1035;
 const PRICES_USD = [];
 for (let p = 5400; p >= 3800; p -= 100) PRICES_USD.push(p);
 
-let currentRate = null;
+// 立即使用外管局中间价渲染表格，不等待网络
+let currentRate = 6.9041; // 国家外汇管理局 2026-03-23 中间价
 let rateTimestamp = null;
 let customRateActive = false;
-let rateSource = '';
+let rateSource = '外管局中间价';
+
+// 立即渲染，零等待
+document.getElementById('rateVal').textContent = currentRate.toFixed(4);
+document.getElementById('rateStatus').textContent = '◎ 默认中间价';
+document.getElementById('rateStatus').className = 'rate-status';
 
 function applyCustomRate() {
   const input = document.getElementById('customRate');
@@ -728,12 +732,15 @@ function applyCustomRate() {
   renderConvTable();
 }
 
-async function fetchRate() {
+async function fetchRate(silent = false) {
   const statusEl = document.getElementById('rateStatus');
   const rateEl = document.getElementById('rateVal');
   if (customRateActive) return;
-  statusEl.className = 'rate-status';
-  statusEl.innerHTML = '<span class="spinner" style="width:10px;height:10px;border-width:1.5px;margin-right:4px"></span>获取中';
+
+  if (!silent) {
+    statusEl.className = 'rate-status';
+    statusEl.innerHTML = '<span class="spinner" style="width:10px;height:10px;border-width:1.5px;margin-right:4px"></span>获取中';
+  }
 
   // === 1. 优先：国家外汇管理局中间价（通过 CORS 代理） ===
   const safeUrl = 'https://www.safe.gov.cn/AppStructured/hlw/RMBQuery.do';
@@ -767,13 +774,14 @@ async function fetchRate() {
         // 外管局格式：690.41 表示 100美元=690.41人民币，即 1美元=6.9041
         const rate = raw > 100 ? raw / 100 : raw;
         if (rate > 5 && rate < 10) {
+          const changed = Math.abs(rate - currentRate) > 0.0001;
           currentRate = rate;
           rateTimestamp = new Date();
           rateSource = `国家外汇管理局 ${dateStr || ''}`;
           rateEl.textContent = rate.toFixed(4);
           statusEl.className = 'rate-status';
           statusEl.innerHTML = `✓ 外管局中间价${dateStr ? ' (' + dateStr + ')' : ''}`;
-          renderConvTable();
+          if (changed) renderConvTable();
           return;
         }
       }
@@ -796,28 +804,24 @@ async function fetchRate() {
       const data = await res.json();
       const rate = api.parse(data);
       if (rate && rate > 5 && rate < 10) {
+        const changed = Math.abs(rate - currentRate) > 0.0001;
         currentRate = rate;
         rateTimestamp = new Date();
         rateSource = api.name;
         rateEl.textContent = rate.toFixed(4);
         statusEl.className = 'rate-status';
         statusEl.textContent = '✓ 实时';
-        renderConvTable();
+        if (changed) renderConvTable();
         return;
       }
     } catch (e) { continue; }
   }
 
-  // === 3. 兜底：硬编码外管局中间价 ===
-  if (!currentRate) {
-    currentRate = 6.9041; // 国家外汇管理局 2026-03-23 中间价
-    rateTimestamp = null;
-    rateSource = '外管局中间价(离线)';
-    rateEl.textContent = currentRate.toFixed(4);
+  // === 3. 全部失败：保留当前汇率不变 ===
+  if (!silent) {
+    statusEl.className = 'rate-status error';
+    statusEl.textContent = '⚠ 更新失败，使用当前值';
   }
-  statusEl.className = 'rate-status error';
-  statusEl.textContent = currentRate === 6.9041 && !rateTimestamp ? '⚠ 离线中间价 6.9041，可手动修改' : '⚠ 沿用上次';
-  renderConvTable();
 }
 
 function renderConvTable() {
@@ -845,16 +849,17 @@ function renderConvTable() {
   html += '</tbody></table>';
 
   const tsInfo = rateTimestamp
-    ? `汇率更新于 ${rateTimestamp.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}` + (rateSource ? ` · 来源: ${rateSource}` : '')
-    : '使用国家外汇管理局中间价 (6.9041)，可在上方手动输入最新汇率';
+    ? `汇率更新于 ${rateTimestamp.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})} · ${rateSource}`
+    : `默认汇率 ${currentRate.toFixed(4)}（外管局中间价），后台自动更新中`;
   html += `<div style="text-align:right;font-size:.62rem;color:var(--text-dim);margin-top:8px;padding-right:4px;">${tsInfo}</div>`;
 
   container.innerHTML = html;
 }
 
-// Fetch on load, then every 4 hours (外管局每工作日仅更新一次)
-fetchRate();
-setInterval(fetchRate, 4 * 60 * 60 * 1000);
+// 立即渲染表格（零等待），后台静默刷新汇率
+renderConvTable();
+fetchRate(true); // silent=true, 不显示加载动画
+setInterval(() => fetchRate(true), 4 * 60 * 60 * 1000);
 </script>
 </body>
 </html>
