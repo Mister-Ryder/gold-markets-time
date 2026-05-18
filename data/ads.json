@@ -1,0 +1,18 @@
+[
+  {
+    "id": "spring-yaji",
+    "slot": "article-top",
+    "title": "春季国学雅集预约",
+    "description": "茶席、诗书、礼乐体验，小班制开放预约。",
+    "url": "index.html#news",
+    "cta": "查看活动"
+  },
+  {
+    "id": "family-course",
+    "slot": "article-bottom",
+    "title": "家风共读课",
+    "description": "为家庭设计的四周经典共读与家书练习。",
+    "url": "index.html#services",
+    "cta": "了解课程"
+  }
+]

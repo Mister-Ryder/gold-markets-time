@@ -293,7 +293,8 @@ p {
 }
 
 .service-grid,
-.article-grid {
+.article-grid,
+.promo-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1px;
@@ -302,7 +303,8 @@ p {
 }
 
 .service-item,
-.article-item {
+.article-item,
+.promo-item {
   min-height: 230px;
   padding: 26px;
   background: rgba(255, 250, 242, .62);
@@ -317,14 +319,16 @@ p {
 }
 
 .service-item h3,
-.article-item h3 {
+.article-item h3,
+.promo-item h3 {
   margin-bottom: 14px;
   font-size: 22px;
 }
 
 .service-item p,
 .article-item p,
-.news-item p {
+.news-item p,
+.promo-item p {
   margin-bottom: 0;
   color: var(--muted);
   line-height: 1.75;
@@ -348,7 +352,8 @@ p {
 }
 
 .news-item span,
-.article-item span {
+.article-item span,
+.promo-item span {
   color: var(--cinnabar);
   font-size: 13px;
   font-weight: 700;
@@ -361,6 +366,30 @@ p {
 
 .article-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.article-item time {
+  display: block;
+  margin-top: 18px;
+  color: var(--tea);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.promo-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.promo-item {
+  min-height: 190px;
+  background: rgba(47, 118, 109, .08);
+}
+
+.text-link {
+  display: inline-flex;
+  margin-top: 18px;
+  color: var(--cinnabar);
+  font-weight: 700;
 }
 
 .footer {
@@ -526,7 +555,8 @@ textarea {
   }
 
   .service-grid,
-  .article-grid {
+  .article-grid,
+  .promo-grid {
     grid-template-columns: 1fr;
   }
 

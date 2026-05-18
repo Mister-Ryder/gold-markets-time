@@ -1,0 +1,32 @@
+[
+  {
+    "slug": "renwen-yi-li",
+    "title": "礼从日常起：国学中的待人之道",
+    "date": "2026-05-12",
+    "category": "礼学",
+    "excerpt": "从问候、座次、馈赠与倾听四个生活场景，理解传统礼学如何转化为当代人的分寸感。",
+    "cover": "",
+    "featured": true,
+    "url": "posts/renwen-yi-li.html"
+  },
+  {
+    "slug": "shijing-siji",
+    "title": "诗经里的四时：草木如何安顿人心",
+    "date": "2026-05-08",
+    "category": "诗教",
+    "excerpt": "以春草、夏木、秋实、冬藏为线索，重读《诗经》中的自然意象与情感表达。",
+    "cover": "",
+    "featured": false,
+    "url": "posts/shijing-siji.html"
+  },
+  {
+    "slug": "jiafeng-jianshu",
+    "title": "家风不是口号：从一封家书开始",
+    "date": "2026-04-26",
+    "category": "家风",
+    "excerpt": "家风教育可以从一封短短的家书开始，把价值观从抽象训诫变成可传递的生活经验。",
+    "cover": "",
+    "featured": true,
+    "url": "posts/jiafeng-jianshu.html"
+  }
+]

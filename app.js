@@ -4,7 +4,9 @@ const fallback = {
   announcement: {},
   services: [],
   news: [],
-  articles: []
+  articles: [],
+  posts: [],
+  ads: []
 };
 
 function setText(id, value) {
@@ -29,6 +31,17 @@ async function loadContent() {
   } catch (error) {
     console.error(error);
     return fallback;
+  }
+}
+
+async function loadJson(path, fallbackValue) {
+  try {
+    const res = await fetch(path, { cache: 'no-store' });
+    if (!res.ok) return fallbackValue;
+    return await res.json();
+  } catch (error) {
+    console.warn(`读取 ${path} 失败`, error);
+    return fallbackValue;
   }
 }
 
@@ -78,11 +91,22 @@ function renderContent(content) {
     </article>
   `);
 
-  renderList('articleGrid', content.articles || [], item => `
+  const posts = content.posts?.length ? content.posts : content.articles || [];
+  renderList('articleGrid', posts, item => `
     <article class="article-item">
       <span>${escapeHtml(item.category || '文章')}</span>
-      <h3>${escapeHtml(item.title)}</h3>
+      <h3>${item.url ? `<a href="${escapeHtml(item.url)}">${escapeHtml(item.title)}</a>` : escapeHtml(item.title)}</h3>
       <p>${escapeHtml(item.excerpt)}</p>
+      ${item.date ? `<time>${escapeHtml(item.date)}</time>` : ''}
+    </article>
+  `);
+
+  renderList('promoGrid', content.ads || [], item => `
+    <article class="promo-item">
+      <span>${escapeHtml(item.label || '推荐')}</span>
+      <h3>${escapeHtml(item.title)}</h3>
+      <p>${escapeHtml(item.description)}</p>
+      ${item.href || item.url ? `<a class="text-link" href="${escapeHtml(item.href || item.url)}">${escapeHtml(item.cta || '了解更多')}</a>` : ''}
     </article>
   `);
 }
@@ -96,4 +120,10 @@ function escapeHtml(value = '') {
     .replaceAll("'", '&#039;');
 }
 
-loadContent().then(renderContent);
+Promise.all([
+  loadContent(),
+  loadJson('data/posts.json', []),
+  loadJson('data/ads.json', [])
+]).then(([content, posts, ads]) => {
+  renderContent({ ...content, posts, ads });
+});
